@@ -34,3 +34,9 @@ node_modules/
 
 # ---- macOS
 .DS_Store
+
+# ---- swift / xcode / gradle build output and bundled toolchains
+.build/
+DerivedData/
+.swiftpm/
+.gradle/
