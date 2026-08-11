@@ -1,0 +1,36 @@
+# ---- build output
+build/
+build-*/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+*.o
+*.a
+*.obj
+*.lo
+*.dylib
+*.so
+
+# ---- built bundles
+*.vst3/
+*.component/
+*.app/
+*.framework/
+
+# ---- generated / extracted data
+out/
+dist/
+scratch/
+work/
+tmp/
+.snapshots/
+
+# ---- python / node
+__pycache__/
+*.pyc
+venv/
+.venv/
+node_modules/
+
+# ---- macOS
+.DS_Store
