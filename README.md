@@ -25,9 +25,11 @@ moved to Apple Silicon the Intel-only binary was the end of it.
 
 I went five years without it. Every project built around it opened broken:
 a missing plugin, or one I could load but couldn't see or trust. I spent a lot
-of that time looking for a replacement. Plenty of distortion plugins get close
-on paper. None of them sounded like the thing those sessions were written
-around, and none of them made the sessions play back the way they were made.
+of that time looking for a replacement. Output's Thermal, a Max for Live device
+called Live Crusher — which I loved — and Ableton's own Amp all earned their
+place in the meantime. But a substitute you like is still a substitute: none of
+them were the thing those old sessions were written around, and none of them
+could make those sessions play back the way they were made.
 
 So the alternative turned out to be the original itself, running again. This
 was a labor of love more than an engineering plan.
