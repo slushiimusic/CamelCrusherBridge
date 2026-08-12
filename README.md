@@ -16,6 +16,29 @@ The result is bit-identical output to the original, in a native session.
 
 ---
 
+## Why this exists
+
+CamelCrusher was in my chain for years. It's on a lot of my old sessions, and
+it isn't the kind of plugin you swap out. Then it stopped working — the GUI
+went blank on newer macOS, Camel Audio had been gone since 2015, and once I
+moved to Apple Silicon the Intel-only binary was the end of it.
+
+I went five years without it. Every project built around it opened broken:
+a missing plugin, or one I could load but couldn't see or trust. I spent a lot
+of that time looking for a replacement. Plenty of distortion plugins get close
+on paper. None of them sounded like the thing those sessions were written
+around, and none of them made the sessions play back the way they were made.
+
+So the alternative turned out to be the original itself, running again. This
+was a labor of love more than an engineering plan.
+
+**It works now.** It loads natively on Apple Silicon under current macOS, and
+the interface — blank since macOS 10.14 — renders again, drawn from the
+original artwork. Old projects re-link and play back correctly. Nothing to
+re-dial from memory.
+
+---
+
 ## How it works
 
 ```
@@ -49,6 +72,9 @@ The shipped `SkinParameters.txt` supplies exact control coordinates and the
 bitmap-font glyph widths, so the native UI matches the 2011 plugin rather than
 approximating it. Built bundles copy the skin into `Contents/Resources/Skins`
 so they're self-contained.
+
+The practical upshot: the editor that had been blank for years is usable again
+on current macOS, on Apple Silicon, in a native (non-Rosetta) host.
 
 ### It impersonates the original's identity
 
@@ -133,4 +159,5 @@ and `auval` passes clean.
 
 ## Status
 
-Complete and in use. Verified in Ableton Live 12 on Apple Silicon.
+Complete and in use — five years of broken sessions open correctly again.
+Verified in Ableton Live 12 on Apple Silicon.
