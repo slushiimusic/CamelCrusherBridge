@@ -206,3 +206,11 @@ and `auval` passes clean.
 
 Complete and in use — five years of broken sessions open correctly again.
 Verified in Ableton Live 12 on Apple Silicon.
+
+---
+
+## License
+
+All rights reserved. This repository is published for reference and is **not**
+open source — see [LICENSE](LICENSE). The bundled CamelCrusher is not covered
+by that notice and remains the property of its owners.

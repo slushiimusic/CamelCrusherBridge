@@ -1,0 +1,37 @@
+Copyright (c) 2026 Julian Scanlan. All rights reserved.
+
+This repository is published for reference only. It is not open source.
+
+No permission is granted to copy, modify, merge, publish, distribute,
+sublicense, or sell this software or any portion of it, in source or binary
+form, modified or unmodified, without prior written permission from the
+copyright holder. No rights are granted by implication, estoppel, or
+otherwise. Any reproduction inherent in GitHub's own platform functionality is
+permitted only to the extent GitHub's Terms of Service require it.
+
+
+SCOPE
+---------------------------------------------------------------------------
+
+This notice covers only the original work in this repository: the arm64 VST2
+and Audio Unit front-ends, the shared-memory bridge and its helper process,
+the native interface code, the build and install scripts, and the null-test
+harness.
+
+It does not cover CamelCrusher itself. CamelCrusher, its binaries, and its
+skin artwork are the property of their respective owners, and are carried in
+the released disk image only because CamelCrusher was distributed as freeware
+and has had no official source since Camel Audio was acquired in 2015. All
+rights in CamelCrusher remain with its owners. This project is not affiliated
+with, endorsed by, or connected to Camel Audio or Apple.
+
+
+NO WARRANTY
+---------------------------------------------------------------------------
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
