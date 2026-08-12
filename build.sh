@@ -31,8 +31,8 @@ cp helper_x86   "$C/MacOS/CamelCrusherHelper"
 
 # Embed the original Intel plugin and its skin art so the bundle is self-contained.
 # Source from the archived pristine copy, never from the install slot itself.
-ORIG="/Library/Application Support/Camel Audio/CamelCrusherOriginal.vst"
-SKIN="/Library/Application Support/Camel Audio/CamelCrusherData/Skins"
+ORIG="${CC_ORIG:-/Library/Application Support/Camel Audio/CamelCrusherOriginal.vst}"
+SKIN="${CC_SKIN:-/Library/Application Support/Camel Audio/CamelCrusherData/Skins}"
 if [ ! -d "$ORIG" ]; then echo "ERROR: pristine original missing at $ORIG" >&2; exit 1; fi
 cp -R "$ORIG" "$C/Resources/CamelCrusher.vst"
 if [ -d "$SKIN" ]; then mkdir -p "$C/Resources/Skins"; cp -R "$SKIN/default" "$C/Resources/Skins/"; fi

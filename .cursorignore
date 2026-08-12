@@ -40,3 +40,12 @@ node_modules/
 DerivedData/
 .swiftpm/
 .gradle/
+
+# ---- build scripts leave these next to the sources
+au_arm64
+plugin_arm64
+helper_x86
+dump_orig
+dump_brdg
+probe
+*.raw

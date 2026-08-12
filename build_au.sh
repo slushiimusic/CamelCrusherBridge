@@ -27,8 +27,8 @@ mkdir -p "$C/MacOS" "$C/Resources"
 cp au_arm64   "$C/MacOS/CamelCrusher"
 cp helper_x86 "$C/MacOS/CamelCrusherHelper"
 
-ORIG="/Library/Application Support/Camel Audio/CamelCrusherOriginal.vst"
-SKIN="/Library/Application Support/Camel Audio/CamelCrusherData/Skins"
+ORIG="${CC_ORIG:-/Library/Application Support/Camel Audio/CamelCrusherOriginal.vst}"
+SKIN="${CC_SKIN:-/Library/Application Support/Camel Audio/CamelCrusherData/Skins}"
 [ -d "$ORIG" ] || { echo "ERROR: pristine original missing at $ORIG" >&2; exit 1; }
 cp -R "$ORIG" "$C/Resources/CamelCrusher.vst"
 [ -d "$SKIN" ] && { mkdir -p "$C/Resources/Skins"; cp -R "$SKIN/default" "$C/Resources/Skins/"; }

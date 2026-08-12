@@ -10,9 +10,39 @@ between the two over POSIX shared memory.
 
 The result is bit-identical output to the original, in a native session.
 
-> This repository contains original code only. It does **not** redistribute
-> CamelCrusher, its skin artwork, or any other Camel Audio property. You need
-> your own copy of the plugin to build anything here.
+---
+
+## Install
+
+**[Download the latest release][latest]**, open the disk image, and double-click
+**Install CamelCrusher Native.command**.
+
+[latest]: https://github.com/slushiimusic/CamelCrusherBridge/releases/latest
+
+No password, no Xcode, and no existing CamelCrusher installation needed — the
+disk image is self-contained. It installs both formats:
+
+```
+VST2   /Library/Audio/Plug-Ins/VST/CamelCrusher.vst
+AU     /Library/Audio/Plug-Ins/Components/CamelCrusher.component
+```
+
+falling back to the matching folders in your own `~/Library` if the system ones
+aren't writable. Restart your DAW and rescan afterwards.
+
+macOS blocks downloaded scripts on the first run. Right-click the installer and
+choose **Open**, then **Open** again in the dialog; if it still refuses, allow it
+under System Settings → Privacy & Security.
+
+Requires an Apple Silicon Mac on macOS 11 or later.
+
+> **On what's bundled.** This repository is original code only — building from
+> it requires your own copy of CamelCrusher. The release disk image additionally
+> carries Camel Audio's original plugin and skin art so it installs on a machine
+> that never had it. CamelCrusher was released as freeware and has had no
+> official download since Camel Audio was acquired in 2015. All rights in
+> CamelCrusher itself remain with its owners; this project is unaffiliated with
+> Camel Audio and with Apple.
 
 ---
 
@@ -107,16 +137,29 @@ Keep a pristine archived copy of the original at the `CamelCrusherOriginal.vst`
 path above and point the build scripts at that — never at an install slot,
 which after a build holds the arm64 bridge instead.
 
-## Build
+## Build from source
+
+```bash
+./install.command   # find the original, build both formats, install them
+```
+
+Run from a checkout, `install.command` switches to build-from-source mode: it
+locates an original CamelCrusher already on the machine, stages a private copy
+of it (so overwriting an install slot can't destroy the last genuine copy),
+builds, and installs. The same script installs the ready-built bundles when it
+runs from the release disk image instead.
+
+To drive the builds directly:
 
 ```bash
 ./build.sh      # VST2 → /Library/Audio/Plug-Ins/VST/CamelCrusher.vst
 ./build_au.sh   # AU   → ~/Library/Audio/Plug-Ins/Components/CamelCrusher.component
 ```
 
-Each script takes an optional argument to override the output path. Both
-compile the x86_64 helper and the arm64 front-end, assemble the bundle, embed
-the original plugin and skin, and ad-hoc codesign the result.
+Each takes an optional argument to override the output path, and reads
+`$CC_ORIG` / `$CC_SKIN` to override where the original plugin and skin art come
+from. Both compile the x86_64 helper and the arm64 front-end, assemble the
+bundle, embed the original plugin and skin, and ad-hoc codesign the result.
 
 Note: `/Library/Audio/Plug-Ins/VST` is `root:wheel`, so a bundle directory
 there may not be removable even when its contents are yours. The scripts clear
