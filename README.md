@@ -14,27 +14,103 @@ The result is bit-identical output to the original, in a native session.
 
 ## Install
 
-**[Download the latest release][latest]**, open the disk image, and double-click
-**Install CamelCrusher Native.command**.
+Requires an **Apple Silicon Mac running macOS 11 or later**. No password, no
+Xcode, and no existing CamelCrusher installation — the disk image is
+self-contained.
+
+### The quick way
+
+1. **[Download the latest release][latest]** and open the `.dmg`.
+2. **Right-click** `Install CamelCrusher Native.command` and choose **Open**.
+   Right-click matters: double-clicking a freshly downloaded script is blocked
+   by macOS.
+3. Click **Open** again in the warning dialog. Terminal opens and the installer
+   runs.
+4. **Restart your DAW** and rescan plugins.
 
 [latest]: https://github.com/slushiimusic/CamelCrusherBridge/releases/latest
 
-No password, no Xcode, and no existing CamelCrusher installation needed — the
-disk image is self-contained. It installs both formats:
+The installer copies both formats into place, ad-hoc signs them, and clears the
+download quarantine flag. It never asks for your password, and it prints every
+path it writes to.
+
+If macOS still refuses to run it, open **System Settings → Privacy & Security**,
+scroll to the bottom, and click **Open Anyway** next to the blocked script.
+
+### Where the plugins go
+
+Two formats get installed, into the standard macOS plug-in folders:
+
+| Format | Preferred location | Fallback |
+|---|---|---|
+| **VST2** | `/Library/Audio/Plug-Ins/VST/CamelCrusher.vst` | `~/Library/Audio/Plug-Ins/VST/CamelCrusher.vst` |
+| **Audio Unit** | `/Library/Audio/Plug-Ins/Components/CamelCrusher.component` | `~/Library/Audio/Plug-Ins/Components/CamelCrusher.component` |
+
+The installer prefers the **system** folders (`/Library/…`) because that is
+where Camel Audio's own installer put things — reusing that slot replaces an
+old CamelCrusher in place instead of leaving you with two entries in your
+plugin list. If a system folder isn't writable, it falls back to the matching
+folder in **your home folder** (`~/Library/…`) without asking for a password.
+Both locations are scanned by Ableton Live and Logic.
+
+`~/Library` is hidden in Finder. To open it: **Go → Go to Folder** (⇧⌘G), then
+paste `~/Library/Audio/Plug-Ins`.
+
+### Installing by hand
+
+If you'd rather not run a script, the disk image contains the finished bundles:
 
 ```
-VST2   /Library/Audio/Plug-Ins/VST/CamelCrusher.vst
-AU     /Library/Audio/Plug-Ins/Components/CamelCrusher.component
+CamelCrusher Native/
+├── Install CamelCrusher Native.command
+├── Plugins/
+│   ├── CamelCrusher.vst          ← VST2 bundle
+│   └── CamelCrusher.component    ← Audio Unit bundle
+├── Source/
+└── Read Me First.txt
 ```
 
-falling back to the matching folders in your own `~/Library` if the system ones
-aren't writable. Restart your DAW and rescan afterwards.
+Drag them from `Plugins/` into the folders in the table above, then clear the
+quarantine flag macOS attaches to anything from a downloaded disk image —
+otherwise your DAW may silently refuse to load them:
 
-macOS blocks downloaded scripts on the first run. Right-click the installer and
-choose **Open**, then **Open** again in the dialog; if it still refuses, allow it
-under System Settings → Privacy & Security.
+```bash
+xattr -cr /Library/Audio/Plug-Ins/VST/CamelCrusher.vst /Library/Audio/Plug-Ins/Components/CamelCrusher.component
+```
 
-Requires an Apple Silicon Mac on macOS 11 or later.
+If you installed into your home folder instead, use these paths:
+
+```bash
+xattr -cr ~/Library/Audio/Plug-Ins/VST/CamelCrusher.vst ~/Library/Audio/Plug-Ins/Components/CamelCrusher.component
+```
+
+### Making your DAW find it
+
+**Ableton Live** — Preferences → **Plug-Ins**. Turn on **Use Audio Units** and
+**Use VST2 Plug-In System Folders**, then click **Rescan**. This is a VST2, not
+a VST3, so the VST3 toggle won't surface it. It appears in the browser under
+Plug-Ins → Camel Audio.
+
+**Logic Pro** — Audio Units only. Logic validates new components at launch, so
+just restart it; CamelCrusher shows under Audio Units → Camel Audio.
+
+Both formats present the original plugin's identity, so **projects that already
+used CamelCrusher re-link to this build on their own** — no missing-plugin
+placeholder, and nothing to re-dial by hand.
+
+### Uninstalling
+
+Delete whichever of these exist:
+
+```bash
+rm -rf ~/Library/Audio/Plug-Ins/VST/CamelCrusher.vst ~/Library/Audio/Plug-Ins/Components/CamelCrusher.component
+```
+
+The system folders are `root:wheel`, so removing a bundle there needs `sudo`:
+
+```bash
+sudo rm -rf /Library/Audio/Plug-Ins/VST/CamelCrusher.vst /Library/Audio/Plug-Ins/Components/CamelCrusher.component
+```
 
 > **On what's bundled.** This repository is original code only — building from
 > it requires your own copy of CamelCrusher. The release disk image additionally
@@ -124,7 +200,10 @@ The AU identity was recovered from the `thng` resource in the original's
 
 ---
 
-## Requirements
+## Requirements for building from source
+
+These apply to building from a checkout of this repo. **Installing from the
+release disk image needs none of them** — see [Install](#install) above.
 
 - Apple Silicon Mac, macOS 11+
 - Xcode command line tools (`clang`)
