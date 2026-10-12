@@ -5,6 +5,25 @@
 
 #include <stdint.h>
 #include <stdatomic.h>
+#include <os/os_sync_wait_on_address.h>
+#include <time.h>
+
+/* Keep the existing wire layout. status negotiates event-driven IPC so a
+   freshly loaded helper can still serve an older host binary safely. */
+#define BRIDGE_WAIT_READY 0x43575731
+static inline void cc_wake(_Atomic uint32_t* address) {
+    if (__builtin_available(macOS 14.4, *))
+        os_sync_wake_by_address_any((void*)address, sizeof(uint32_t), OS_SYNC_WAKE_BY_ADDRESS_SHARED);
+}
+static inline void cc_wait(_Atomic uint32_t* address, uint32_t expected, uint64_t ns) {
+    if (__builtin_available(macOS 14.4, *)) {
+        os_sync_wait_on_address_with_timeout((void*)address, expected, sizeof(uint32_t),
+            OS_SYNC_WAIT_ON_ADDRESS_SHARED, OS_CLOCK_MACH_ABSOLUTE_TIME, ns);
+    } else {
+        struct timespec ts = {0, 50000};
+        nanosleep(&ts, NULL);
+    }
+}
 
 #define BRIDGE_MAGIC     0x43424731u   /* 'CBG1' */
 #define BRIDGE_MAX_BLOCK 8192

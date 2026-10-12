@@ -156,25 +156,28 @@ int main(int argc, char** argv) {
 
     fx->dispatcher(fx, effMainsChanged, 0, 1, NULL, 0.f);
     fx->dispatcher(fx, effStartProcess, 0, 0, NULL, 0.f);
-    atomic_store(&s->helperReady, 1);
-
     uint32_t last = atomic_load(&s->reqSeq);
-    long idle = 0;
+    atomic_store(&s->helperReady, 1);
+    time_t parentCheck = time(NULL);
     for (;;) {
         uint32_t r = atomic_load(&s->reqSeq);
         if (r != last) {
             int cmd = s->cmd;
-            if (cmd == CMD_QUIT) { atomic_store(&s->ackSeq, r); break; }
+            if (cmd == CMD_QUIT) { atomic_store(&s->ackSeq, r); cc_wake(&s->ackSeq); break; }
             handle(cmd);
             last = r;
             atomic_store(&s->ackSeq, r);
-            idle = 0;
+            cc_wake(&s->ackSeq);
         } else {
-            /* Busy-wait briefly for low latency, then back off to stay cool. */
-            if (idle < 40000) { idle++; __asm__ __volatile__("pause"); }
-            else { flush_params(); nap(200); }
+            flush_params();
+            if (s->status == BRIDGE_WAIT_READY) cc_wait(&s->reqSeq, r, 50000000ULL);
+            else nap(50); /* compatibility with an already-loaded old host */
         }
-        if (getppid() == 1) break;   /* parent (host) died */
+        time_t now = time(NULL);
+        if (now != parentCheck) {
+            parentCheck = now;
+            if (getppid() == 1) break;
+        }
     }
 
     fx->dispatcher(fx, effStopProcess, 0, 0, NULL, 0.f);

@@ -54,14 +54,16 @@ int bridge_call(Bridge* b, int cmd, int timeout_us) {
     BridgeSHM* s = b->shm;
     s->cmd = cmd;
     uint32_t seq = atomic_fetch_add(&s->reqSeq, 1) + 1;
+    cc_wake(&s->reqSeq);
     uint64_t deadline = now_us() + (uint64_t)timeout_us;
-    long spins = 0;
     for (;;) {
-        if (atomic_load(&s->ackSeq) == seq) return 1;
+        uint32_t ack = atomic_load(&s->ackSeq);
+        if (ack == seq) return 1;
         if (atomic_load(&s->helperFailed)) { b->ok = 0; return 0; }
-        if (++spins < 8000) { __asm__ __volatile__("yield"); continue; }
-        if (now_us() > deadline) { b->ok = 0; return 0; }
-        nap(50);
+        uint64_t now = now_us();
+        if (now >= deadline) { b->ok = 0; return 0; }
+        uint64_t remaining = deadline - now;
+        cc_wait(&s->ackSeq, ack, (remaining < 50000 ? remaining : 50000) * 1000ULL);
     }
 }
 
@@ -193,6 +195,7 @@ int bridge_start(Bridge* b) {
     memset(b->shm, 0, sizeof(BridgeSHM));
     b->shm->magic = BRIDGE_MAGIC;
     b->shm->structSize = (uint32_t)sizeof(BridgeSHM);
+    b->shm->status = BRIDGE_WAIT_READY;
 
     char dir[1024], helper[1100], vst[1400];
     if (!self_dir(dir, sizeof(dir))) return 0;

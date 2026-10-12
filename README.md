@@ -10,6 +10,25 @@ between the two over POSIX shared memory.
 
 The result is bit-identical output to the original, in a native session.
 
+## 1.0.2: lower CPU use
+
+The bridge and Intel helper now sleep while waiting for each other instead of
+continuously spinning. Sessions with several CamelCrusher instances no longer
+keep a CPU core busy per helper just waiting for audio work. Restart your DAW
+after updating so both halves of the bridge reload.
+
+On macOS 14.4 and later, shared-address notifications wake each process when
+work or a result is ready. Earlier systems use short sleeps. The helper remains
+compatible with an older bridge already loaded in a running host, and its
+startup handshake no longer risks missing the first request.
+
+In a controlled 48 kHz test at a 512-sample buffer, helper CPU fell from 75.49%
+to 2.13% of one core. Six comparisons covering factory presets and parameter
+automation produced bit-identical audio to the previous build in both release
+formats. Real-time checks at 128, 256, 512, and 1024 samples returned finite
+audio; a release check at 128 samples on a busy Mac had two late blocks.
+CPU use and scheduling latency depend on hardware, buffer size, and system load.
+
 ---
 
 ## Install
@@ -206,7 +225,7 @@ These apply to building from a checkout of this repo. **Installing from the
 release disk image needs none of them** — see [Install](#install) above.
 
 - Apple Silicon Mac, macOS 11+
-- Xcode command line tools (`clang`)
+- Xcode command line tools (`clang`) with the macOS 14.4 SDK or newer
 - **Your own copy of CamelCrusher**, with:
   - the original Intel VST at
     `/Library/Application Support/Camel Audio/CamelCrusherOriginal.vst`
@@ -239,6 +258,9 @@ Each takes an optional argument to override the output path, and reads
 `$CC_ORIG` / `$CC_SKIN` to override where the original plugin and skin art come
 from. Both compile the x86_64 helper and the arm64 front-end, assemble the
 bundle, embed the original plugin and skin, and ad-hoc codesign the result.
+Builds target macOS 11 by default; `MACOSX_DEPLOYMENT_TARGET` can override this.
+The new wait APIs are guarded at runtime. The fallback for systems older than
+14.4 has not been exercised on an older OS in the 1.0.2 release checks.
 
 Note: `/Library/Audio/Plug-Ins/VST` is `root:wheel`, so a bundle directory
 there may not be removable even when its contents are yours. The scripts clear

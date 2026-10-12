@@ -2,6 +2,7 @@
 # Builds "CamelCrusher Native.vst": an arm64 VST2 plugin plus its x86_64 helper.
 set -euo pipefail
 cd "$(dirname "$0")"
+export MACOSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET:-11.0}"
 
 OUT="${1:-/Library/Audio/Plug-Ins/VST/CamelCrusher.vst}"
 EXE="$(basename "${OUT%.vst}")"
@@ -49,8 +50,8 @@ cat > "$C/Info.plist" <<'PLIST'
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
   <key>CFBundleName</key><string>CamelCrusher</string>
   <key>CFBundlePackageType</key><string>BNDL</string>
-  <key>CFBundleShortVersionString</key><string>1.0.1</string>
-  <key>CFBundleVersion</key><string>1.0.1</string>
+  <key>CFBundleShortVersionString</key><string>1.0.2</string>
+  <key>CFBundleVersion</key><string>1.0.2</string>
   <key>CFBundleSignature</key><string>CcBn</string>
   <key>LSMinimumSystemVersion</key><string>11.0</string>
 </dict>

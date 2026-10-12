@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 cd "$(dirname "$0")"
+export MACOSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET:-11.0}"
 
 OUT="${1:-$HOME/Library/Audio/Plug-Ins/Components/CamelCrusher.component}"
 C="$OUT/Contents"
@@ -48,8 +49,8 @@ cat > "$C/Info.plist" <<'PLIST'
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
   <key>CFBundleName</key><string>CamelCrusher</string>
   <key>CFBundlePackageType</key><string>BNDL</string>
-  <key>CFBundleShortVersionString</key><string>1.01</string>
-  <key>CFBundleVersion</key><string>1.01</string>
+  <key>CFBundleShortVersionString</key><string>1.0.2</string>
+  <key>CFBundleVersion</key><string>1.0.2</string>
   <key>CFBundleSignature</key><string>????</string>
   <key>LSMinimumSystemVersion</key><string>11.0</string>
   <key>AudioComponents</key>
@@ -60,7 +61,7 @@ cat > "$C/Info.plist" <<'PLIST'
       <key>manufacturer</key><string>CamA</string>
       <key>name</key><string>Camel Audio: CamelCrusher</string>
       <key>description</key><string>CamelCrusher</string>
-      <key>version</key><integer>257</integer>
+      <key>version</key><integer>65538</integer>
       <key>factoryFunction</key><string>CamelCrusherAUFactory</string>
       <key>sandboxSafe</key><false/>
     </dict>
