@@ -10,7 +10,7 @@ echo "==> compiling x86_64 helper"
 clang -arch x86_64 -O2 -o helper_x86 helper.c
 
 echo "==> compiling arm64 Audio Unit"
-clang -arch arm64 -O2 -fPIC -bundle -fobjc-arc \
+clang -arch arm64 -O2 -fPIC -bundle -fobjc-arc -DCCView=CCAUView \
       -o au_arm64 au.c bridge.c gui.m auview.m \
       -framework Cocoa -framework AudioUnit -framework AudioToolbox \
       -framework CoreAudio -framework CoreFoundation \
@@ -49,8 +49,8 @@ cat > "$C/Info.plist" <<'PLIST'
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
   <key>CFBundleName</key><string>CamelCrusher</string>
   <key>CFBundlePackageType</key><string>BNDL</string>
-  <key>CFBundleShortVersionString</key><string>1.0.2</string>
-  <key>CFBundleVersion</key><string>1.0.2</string>
+  <key>CFBundleShortVersionString</key><string>1.0.4</string>
+  <key>CFBundleVersion</key><string>1.0.4</string>
   <key>CFBundleSignature</key><string>????</string>
   <key>LSMinimumSystemVersion</key><string>11.0</string>
   <key>AudioComponents</key>
@@ -61,7 +61,7 @@ cat > "$C/Info.plist" <<'PLIST'
       <key>manufacturer</key><string>CamA</string>
       <key>name</key><string>Camel Audio: CamelCrusher</string>
       <key>description</key><string>CamelCrusher</string>
-      <key>version</key><integer>65538</integer>
+      <key>version</key><integer>65540</integer>
       <key>factoryFunction</key><string>CamelCrusherAUFactory</string>
       <key>sandboxSafe</key><false/>
     </dict>
@@ -70,6 +70,10 @@ cat > "$C/Info.plist" <<'PLIST'
 </plist>
 PLIST
 printf 'BNDL????' > "$C/PkgInfo"
+
+# Optional bank supplied by the owner; proprietary assets stay outside Git.
+BANK="${CC_BANK:-/Library/Application Support/Camel Audio/CamelCrusherData/CamelCrusherPresetsA.fxb}"
+if [ -f "$BANK" ]; then cp "$BANK" "$C/Resources/CamelCrusherPresetsA.fxb"; fi
 
 echo "==> signing"
 xattr -cr "$OUT"

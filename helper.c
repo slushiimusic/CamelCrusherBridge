@@ -116,6 +116,41 @@ static void handle(int cmd) {
     }
 }
 
+/* FXB wrapper fields are big-endian; the opaque Camel Audio chunk is not. */
+static uint32_t bank_u32(const unsigned char* p) {
+    return ((uint32_t)p[0] << 24) | ((uint32_t)p[1] << 16) |
+           ((uint32_t)p[2] << 8) | (uint32_t)p[3];
+}
+
+static void load_factory_bank(AEffect* fx, const char* path) {
+    FILE* f = fopen(path, "rb");
+    if (!f) return; /* Source builds without a supplied bank retain Init. */
+    unsigned char header[160];
+    if (fread(header, 1, sizeof(header), f) != sizeof(header) ||
+        memcmp(header, "CcnK", 4) || memcmp(header + 8, "FBCh", 4) ||
+        bank_u32(header + 16) != (uint32_t)fx->uniqueID ||
+        bank_u32(header + 24) != (uint32_t)fx->numPrograms) {
+        fprintf(stderr, "CamelCrusher: invalid factory bank header\n");
+        fclose(f); return;
+    }
+    uint32_t size = bank_u32(header + 156);
+    /* Camel Audio's shipped bank counts the leading eight bytes in byteSize.
+       Accept that legacy value as well as the standard FXB byteSize. */
+    uint32_t declared = bank_u32(header + 4);
+    if (!size || size > BRIDGE_MAX_CHUNK ||
+        (declared != size + 152 && declared != size + 160)) {
+        fprintf(stderr, "CamelCrusher: invalid factory bank size\n");
+        fclose(f); return;
+    }
+    unsigned char* chunk = malloc(size);
+    if (chunk && fread(chunk, 1, size, f) == size && fgetc(f) == EOF) {
+        fx->dispatcher(fx, effSetChunk, 0, size, chunk, 0.f);
+        fx->dispatcher(fx, effSetProgram, 0, 0, NULL, 0.f);
+    }
+    free(chunk);
+    fclose(f);
+}
+
 int main(int argc, char** argv) {
     if (argc < 3) { fprintf(stderr, "usage: helper <shmname> <vstpath>\n"); return 2; }
     signal(SIGPIPE, SIG_IGN);
@@ -143,6 +178,8 @@ int main(int argc, char** argv) {
     fx->dispatcher(fx, effOpen, 0, 0, NULL, 0.f);
     fx->dispatcher(fx, effSetSampleRate, 0, 0, NULL, (float)g_sr);
     fx->dispatcher(fx, effSetBlockSize, 0, g_bs, NULL, 0.f);
+
+    if (argc > 3) load_factory_bank(fx, argv[3]);
 
     s->numInputs   = fx->numInputs;
     s->numOutputs  = fx->numOutputs;

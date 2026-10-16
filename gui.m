@@ -149,7 +149,7 @@ static NSImage* loadSkin(const char* name) {
     for (int i = 0; i < kNumCtls; i++) {
         const Ctl* c = &kCtls[i];
         NSRect r = ctlRect(c);
-        float v = (c->param >= 0) ? bridge_get_param(bridge, c->param) : 0.f;
+        float v = (bridge && c->param >= 0) ? bridge_get_param(bridge, c->param) : 0.f;
         switch (c->type) {
         case T_KNOB:
             [self drawStrip:imgKnob at:r frame:(int)lroundf(v * (knobFrames - 1))
@@ -187,6 +187,7 @@ static NSImage* loadSkin(const char* name) {
 }
 
 - (void)pushParam:(int)idx value:(float)v {
+    if (!bridge) return;
     bridge_set_param(bridge, idx, v);
     if (bridge->master) {
         bridge->master(&bridge->eff, audioMasterAutomate, idx, 0, NULL, v);
@@ -196,25 +197,25 @@ static NSImage* loadSkin(const char* name) {
 }
 
 - (void)loadProgram:(int)n {
-    if (n < 0) n = bridge->eff.numPrograms - 1;
-    if (n >= bridge->eff.numPrograms) n = 0;
-    curProgram = n;
-    bridge->eff.dispatcher(&bridge->eff, effSetProgram, 0, n, NULL, 0.f);
+    if (!bridge || !bridge->ok || !bridge->shm) return;
+    int count = bridge->shm->numPrograms;
+    if (count <= 0) return;
+    if (n < 0) n = count - 1;
+    if (n >= count) n = 0;
+    bridge_set_program(bridge, n);
+    curProgram = bridge->curProgram;
     [self syncProgramName];
     [self setNeedsDisplay:YES];
 }
 
 - (void)syncProgramName {
-    char buf[64];
-    memset(buf, 0, sizeof(buf));
-    if (bridge->eff.dispatcher(&bridge->eff, effGetProgramNameIndexed,
-                               curProgram, 0, buf, 0.f)) {
-        strncpy(progName, buf, sizeof(progName) - 1);
-        progName[sizeof(progName) - 1] = 0;
-    }
+    if (!bridge) return;
+    const char* name = bridge_program_name(bridge, curProgram);
+    snprintf(progName, sizeof(progName), "%s", name);
 }
 
 - (void)mouseDown:(NSEvent*)ev {
+    if (!bridge) return;
     NSPoint p = [self convertPoint:[ev locationInWindow] fromView:nil];
     int i = [self hitTestCtl:p];
     dragIdx = -1;
@@ -258,6 +259,7 @@ static NSImage* loadSkin(const char* name) {
 }
 
 - (void)mouseDragged:(NSEvent*)ev {
+    if (!bridge) return;
     if (dragIdx < 0) return;
     const Ctl* c = &kCtls[dragIdx];
     NSPoint p = [self convertPoint:[ev locationInWindow] fromView:nil];
@@ -269,6 +271,7 @@ static NSImage* loadSkin(const char* name) {
 }
 
 - (void)mouseUp:(NSEvent*)ev {
+    if (!bridge) return;
     (void)ev;
     if (dragIdx >= 0 && bridge->master)
         bridge->master(&bridge->eff, audioMasterEndEdit, kCtls[dragIdx].param, 0, NULL, 0.f);
@@ -277,6 +280,7 @@ static NSImage* loadSkin(const char* name) {
 
 /* Poll for host-side automation so the UI tracks the DAW. */
 - (void)tick:(NSTimer*)t {
+    if (!bridge) return;
     (void)t;
     int dirty = 0;
     if (bridge->curProgram != curProgram) {   /* host switched preset */
@@ -332,13 +336,21 @@ void* cc_editor_create(Bridge* b, void* parent) {
 
 /* AU hosts take ownership of a detached view. */
 void* cc_editor_create_standalone(Bridge* b) {
-    @autoreleasepool { return (void*)CFBridgingRetain(cc_make_view(b)); }
+    @autoreleasepool {
+        /* Keep a separate AU-owned reference so disposal can detach the view
+           even when the host keeps its NSView alive longer than the AU. */
+        if (b->editor) { cc_editor_destroy(b->editor); b->editor = NULL; }
+        CCView* v = cc_make_view(b);
+        b->editor = (void*)CFBridgingRetain(v);
+        return (void*)CFBridgingRetain(v);
+    }
 }
 
 void cc_editor_destroy(void* editor) {
     if (!editor) return;
     @autoreleasepool {
         CCView* v = (CCView*)CFBridgingRelease(editor);
+        v->bridge = NULL;
         [v->timer invalidate];
         v->timer = nil;
         [v removeFromSuperview];

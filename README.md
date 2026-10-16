@@ -10,6 +10,33 @@ between the two over POSIX shared memory.
 
 The result is bit-identical output to the original, in a native session.
 
+## 1.0.4: Audio Unit editor crash fix
+
+Fixes the crash when opening the AU editor in Ableton Live. The shared editor
+now uses the bridge's program APIs instead of calling an unset VST dispatcher
+inside the AU. AU views are detached and their polling timers are stopped when
+the unit is disposed or its editor is replaced. The AU and VST use distinct
+Objective-C view class names when loaded into the same host.
+
+**Use 1.0.4 instead of 1.0.3.** Audio-only validation did not expose the editor
+crash. The new editor regression test reproduces the crash in 1.0.3 and passes
+25 open/change-preset/redraw/replace/dispose cycles in 1.0.4 with VST co-loaded.
+
+## 1.0.3: factory presets and a graphical installer
+
+Both formats now load the supplied 20-program CamelCrusher factory bank at
+startup. The preset menu shows names such as Annihilate, British Clean and
+Subtle Master instead of twenty Init slots. Session state restored by your
+DAW is applied after the factory bank, preserving saved settings. VST2 also
+reports the selected program's name correctly.
+
+The release includes **Install CamelCrusher Native.app** and a standalone
+**.pkg**. Both use the macOS Installer wizard to install VST2 and AU together.
+The previous system bundles are backed up before replacement.
+
+The separate Tianzii CamelCrusher Modern `.fst` files are FL Studio Patcher
+layouts and are not included: their supplied license prohibits reuploading.
+
 ## 1.0.2: lower CPU use
 
 The bridge and Intel helper now sleep while waiting for each other instead of
@@ -33,75 +60,40 @@ CPU use and scheduling latency depend on hardware, buffer size, and system load.
 
 ## Install
 
-Requires an **Apple Silicon Mac running macOS 11 or later**. No password, no
-Xcode, and no existing CamelCrusher installation — the disk image is
-self-contained.
+Requires an **Apple Silicon Mac running macOS 11 or later**, **Rosetta 2**,
+and an administrator account. The release contains both plugins and the bank;
+Xcode and an existing CamelCrusher installation are not needed.
 
-### The quick way
-
-1. **[Download the latest release][latest]** and open the `.dmg`.
-2. **Right-click** `Install CamelCrusher Native.command` and choose **Open**.
-   Right-click matters: double-clicking a freshly downloaded script is blocked
-   by macOS.
-3. Click **Open** again in the warning dialog. Terminal opens and the installer
-   runs.
-4. **Restart your DAW** and rescan plugins.
+1. **[Download the latest release][latest]**.
+2. Extract `CamelCrusherNative-1.0.4-Installer.zip` and open
+   **Install CamelCrusher Native.app**, or open the standalone `.pkg`.
+3. Save your work and quit your DAW. Choose **Continue to Installer**, then
+   follow the macOS Installer wizard. It asks for an administrator password.
+4. Restart your DAW and rescan plugins.
 
 [latest]: https://github.com/slushiimusic/CamelCrusherBridge/releases/latest
 
-The installer copies both formats into place, ad-hoc signs them, and clears the
-download quarantine flag. It never asks for your password, and it prints every
-path it writes to.
+This build is ad-hoc signed, not Developer ID signed or notarized. macOS may
+require approval in **System Settings → Privacy & Security → Open Anyway**.
+The installer does not disable Gatekeeper or change system security settings.
+If Rosetta is missing, install it through macOS before running the installer.
 
-If macOS still refuses to run it, open **System Settings → Privacy & Security**,
-scroll to the bottom, and click **Open Anyway** next to the blocked script.
+### Installed locations and backups
 
-### Where the plugins go
+| Format | Location |
+|---|---|
+| VST2 | `/Library/Audio/Plug-Ins/VST/CamelCrusher.vst` |
+| Audio Unit | `/Library/Audio/Plug-Ins/Components/CamelCrusher.component` |
 
-Two formats get installed, into the standard macOS plug-in folders:
+The bank is embedded in each bundle at
+`Contents/Resources/CamelCrusherPresetsA.fxb`. No separate data-folder copy is
+needed. Existing system bundles are copied to a timestamped directory under
+`/Library/Application Support/CamelCrusherBridge/Backups` before replacement.
+If you previously installed a user-level copy in `~/Library/Audio/Plug-Ins`,
+move that older copy out of the scan folder to avoid duplicate entries.
 
-| Format | Preferred location | Fallback |
-|---|---|---|
-| **VST2** | `/Library/Audio/Plug-Ins/VST/CamelCrusher.vst` | `~/Library/Audio/Plug-Ins/VST/CamelCrusher.vst` |
-| **Audio Unit** | `/Library/Audio/Plug-Ins/Components/CamelCrusher.component` | `~/Library/Audio/Plug-Ins/Components/CamelCrusher.component` |
-
-The installer prefers the **system** folders (`/Library/…`) because that is
-where Camel Audio's own installer put things — reusing that slot replaces an
-old CamelCrusher in place instead of leaving you with two entries in your
-plugin list. If a system folder isn't writable, it falls back to the matching
-folder in **your home folder** (`~/Library/…`) without asking for a password.
-Both locations are scanned by Ableton Live and Logic.
-
-`~/Library` is hidden in Finder. To open it: **Go → Go to Folder** (⇧⌘G), then
-paste `~/Library/Audio/Plug-Ins`.
-
-### Installing by hand
-
-If you'd rather not run a script, the disk image contains the finished bundles:
-
-```
-CamelCrusher Native/
-├── Install CamelCrusher Native.command
-├── Plugins/
-│   ├── CamelCrusher.vst          ← VST2 bundle
-│   └── CamelCrusher.component    ← Audio Unit bundle
-├── Source/
-└── Read Me First.txt
-```
-
-Drag them from `Plugins/` into the folders in the table above, then clear the
-quarantine flag macOS attaches to anything from a downloaded disk image —
-otherwise your DAW may silently refuse to load them:
-
-```bash
-xattr -cr /Library/Audio/Plug-Ins/VST/CamelCrusher.vst /Library/Audio/Plug-Ins/Components/CamelCrusher.component
-```
-
-If you installed into your home folder instead, use these paths:
-
-```bash
-xattr -cr ~/Library/Audio/Plug-Ins/VST/CamelCrusher.vst ~/Library/Audio/Plug-Ins/Components/CamelCrusher.component
-```
+The legacy `install.command` remains available for source builds and users
+who need its per-user fallback. The graphical package installs system-wide.
 
 ### Making your DAW find it
 
@@ -254,8 +246,14 @@ To drive the builds directly:
 ./build_au.sh   # AU   → ~/Library/Audio/Plug-Ins/Components/CamelCrusher.component
 ```
 
+To package a release, build both bundles under `build/Plugins`, supplying
+`CC_ORIG`, `CC_SKIN`, and `CC_BANK` with your original plugin, skin directory,
+and `CamelCrusherPresetsA.fxb` respectively. Then run `python3 build_installer.py`.
+It produces the installer app ZIP and standalone PKG in `dist`. Proprietary
+plugin, skin and preset assets are supplied at build time and are not committed.
+
 Each takes an optional argument to override the output path, and reads
-`$CC_ORIG` / `$CC_SKIN` to override where the original plugin and skin art come
+`$CC_ORIG` / `$CC_SKIN` / `$CC_BANK` to override where the original plugin and skin art come
 from. Both compile the x86_64 helper and the arm64 front-end, assemble the
 bundle, embed the original plugin and skin, and ad-hoc codesign the result.
 Builds target macOS 11 by default; `MACOSX_DEPLOYMENT_TARGET` can override this.
@@ -315,3 +313,35 @@ Verified in Ableton Live 12 on Apple Silicon.
 All rights reserved. This repository is published for reference and is **not**
 open source — see [LICENSE](LICENSE). The bundled CamelCrusher is not covered
 by that notice and remains the property of its owners.
+
+## Preset release checks
+
+Build the test tools into `build`:
+
+```bash
+clang -arch arm64 -O2 preset_check.c -o build/preset_check
+clang -arch x86_64 -O2 preset_check.c -o build/preset_check_orig
+clang -arch arm64 -O2 dumper.c -o build/dump_brdg
+clang -arch x86_64 -O2 dumper.c -o build/dump_orig
+clang -arch arm64 -O2 audump.c -framework AudioUnit -framework AudioToolbox -framework CoreFoundation -o build/audump
+python3 verify_release.py
+```
+
+`preset_check` takes a plugin executable path and optionally an FXB path for
+the original plugin. It checks all preset names, prints all parameter values,
+and checks a modified bank survives a save/restore cycle. Compare its output
+between the original and bridge. `verify_release.py` compares rendered audio
+for every factory preset in the staged VST2 and AU against the original with
+the same bank. The AU is registered only within the test process.
+
+To exercise the AU editor, including concurrent loading of the VST format:
+
+```bash
+clang -arch arm64 -O1 -g -fobjc-arc editor_check.m -framework Cocoa -framework AudioUnit -framework AudioToolbox -o build/editor_check
+build/editor_check "$PWD/build/Plugins/CamelCrusher.component" "$PWD/build/Plugins/CamelCrusher.vst/Contents/MacOS/CamelCrusher" "$PWD/build/au-editor.png"
+```
+
+Run this in a graphical macOS session. It opens the Cocoa factory view in an
+isolated host, selects every preset and checks wraparound, redraws, replaces
+views, and retains a view across AU disposal to check safe detachment. It does
+not open or modify an Ableton project.

@@ -595,6 +595,10 @@ static OSStatus CCSysEx(void* self, const UInt8* data, UInt32 len) {
 static OSStatus CCClose(void* self) {
     CCAU* u = (CCAU*)self;
     if (!u) return noErr;
+    if (u->br.editor) {
+        cc_editor_destroy(u->br.editor);
+        u->br.editor = NULL;
+    }
     if (u->initialized) bridge_set_mains(&u->br, 0);
     if (u->started) bridge_stop(&u->br);
     for (int i = 0; i < CC_NUM_PRESETS; i++)

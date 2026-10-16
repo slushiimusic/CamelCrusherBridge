@@ -227,6 +227,22 @@ else
     else
         export CC_SKIN="$WORK/none"
     fi
+    BANK_SRC=""
+    for cand in "${CC_BANK:-}" \
+        "$CANON_SUPPORT/CamelCrusherData/CamelCrusherPresetsA.fxb" \
+        "/Library/Audio/Plug-Ins/VST/CamelCrusher.vst/Contents/Resources/CamelCrusherPresetsA.fxb" \
+        "$HOME/Library/Audio/Plug-Ins/VST/CamelCrusher.vst/Contents/Resources/CamelCrusherPresetsA.fxb" \
+        "/Library/Audio/Plug-Ins/Components/CamelCrusher.component/Contents/Resources/CamelCrusherPresetsA.fxb" \
+        "$HOME/Library/Audio/Plug-Ins/Components/CamelCrusher.component/Contents/Resources/CamelCrusherPresetsA.fxb"
+    do
+        if [ -f "$cand" ]; then BANK_SRC="$cand"; break; fi
+    done
+    if [ -n "$BANK_SRC" ]; then
+        cp "$BANK_SRC" "$WORK/CamelCrusherPresetsA.fxb" || die "Could not stage the preset bank."
+        export CC_BANK="$WORK/CamelCrusherPresetsA.fxb"
+    else
+        warn "No factory bank found; set CC_BANK to CamelCrusherPresetsA.fxb to include presets."
+    fi
     ok "staged a private copy of the original"
 
     if [ ! -d "$CANON_ORIG" ]; then

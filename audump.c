@@ -40,7 +40,19 @@ int main(int argc, char** argv) {
     int mode    = (argc > 3) ? atoi(argv[3]) : 0;
 
     AudioComponentDescription d = { 'aumf', 'CaCr', 'CamA', 0, 0 };
-    AudioComponent comp = AudioComponentFindNext(NULL, &d);
+    AudioComponent comp;
+    if (argc > 4) {
+        CFURLRef url = CFURLCreateFromFileSystemRepresentation(NULL,
+            (const UInt8*)argv[4], strlen(argv[4]), true);
+        CFBundleRef bundle = CFBundleCreate(NULL, url);
+        CFRelease(url);
+        if (!bundle || !CFBundleLoadExecutable(bundle)) return 1;
+        AudioComponentFactoryFunction factory = (AudioComponentFactoryFunction)
+            CFBundleGetFunctionPointerForName(bundle, CFSTR("CamelCrusherAUFactory"));
+        if (!factory) return 1;
+        d.componentSubType = 'Ctst'; /* Process-local registration of staged build. */
+        comp = AudioComponentRegister(&d, CFSTR("CamelCrusher test"), 65539, factory);
+    } else comp = AudioComponentFindNext(NULL, &d);
     if (!comp) { fprintf(stderr, "component not found\n"); return 1; }
     AudioUnit au;
     if (AudioComponentInstanceNew(comp, &au) != noErr) { fprintf(stderr, "new failed\n"); return 1; }

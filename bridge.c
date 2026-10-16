@@ -197,14 +197,15 @@ int bridge_start(Bridge* b) {
     b->shm->structSize = (uint32_t)sizeof(BridgeSHM);
     b->shm->status = BRIDGE_WAIT_READY;
 
-    char dir[1024], helper[1100], vst[1400];
+    char dir[1024], helper[1100], vst[1400], bank[1400];
     if (!self_dir(dir, sizeof(dir))) return 0;
     snprintf(helper, sizeof(helper), "%s/CamelCrusherHelper", dir);
     snprintf(vst, sizeof(vst), "%s/../Resources/CamelCrusher.vst/Contents/MacOS/CamelCrusher", dir);
     if (access(vst, R_OK) != 0)
         snprintf(vst, sizeof(vst), "%s", CC_ORIGINAL_VST);
 
-    char* argv[] = { helper, b->shmname, vst, NULL };
+    snprintf(bank, sizeof(bank), "%s/../Resources/CamelCrusherPresetsA.fxb", dir);
+    char* argv[] = { helper, b->shmname, vst, bank, NULL };
     posix_spawnattr_t attr;
     posix_spawnattr_init(&attr);
     /* Helper is x86_64-only; the kernel routes it through Rosetta automatically. */

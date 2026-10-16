@@ -36,6 +36,19 @@ int main(int argc, char** argv) {
     if (!fx || fx->magic != kEffectMagic) { fprintf(stderr, "bad effect\n"); return 1; }
 
     fx->dispatcher(fx, effOpen, 0, 0, NULL, 0.f);
+    /* Optional reference bank for testing original versus the packaged bridge. */
+    if (argc > 5) {
+        FILE* bank = fopen(argv[5], "rb");
+        if (!bank) return 1;
+        fseek(bank, 0, SEEK_END); long size = ftell(bank) - 160;
+        if (size <= 0 || size > 1048576) { fclose(bank); return 1; }
+        fseek(bank, 160, SEEK_SET);
+        void* data = malloc((size_t)size);
+        if (!data || fread(data, 1, (size_t)size, bank) != (size_t)size) return 1;
+        fclose(bank);
+        fx->dispatcher(fx, effSetChunk, 0, size, data, 0.f);
+        free(data);
+    }
     fx->dispatcher(fx, effSetSampleRate, 0, 0, NULL, (float)SR);
     fx->dispatcher(fx, effSetBlockSize, 0, BLK, NULL, 0.f);
     fx->dispatcher(fx, effMainsChanged, 0, 1, NULL, 0.f);

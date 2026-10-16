@@ -50,8 +50,8 @@ cat > "$C/Info.plist" <<'PLIST'
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
   <key>CFBundleName</key><string>CamelCrusher</string>
   <key>CFBundlePackageType</key><string>BNDL</string>
-  <key>CFBundleShortVersionString</key><string>1.0.2</string>
-  <key>CFBundleVersion</key><string>1.0.2</string>
+  <key>CFBundleShortVersionString</key><string>1.0.4</string>
+  <key>CFBundleVersion</key><string>1.0.4</string>
   <key>CFBundleSignature</key><string>CcBn</string>
   <key>LSMinimumSystemVersion</key><string>11.0</string>
 </dict>
@@ -59,6 +59,10 @@ cat > "$C/Info.plist" <<'PLIST'
 PLIST
 /usr/bin/sed -i '' "s|__EXE__|$EXE|" "$C/Info.plist"
 printf 'BNDLCcBn' > "$C/PkgInfo"
+
+# Optional bank supplied by the owner; proprietary assets stay outside Git.
+BANK="${CC_BANK:-/Library/Application Support/Camel Audio/CamelCrusherData/CamelCrusherPresetsA.fxb}"
+if [ -f "$BANK" ]; then cp "$BANK" "$C/Resources/CamelCrusherPresetsA.fxb"; fi
 
 echo "==> signing"
 xattr -cr "$OUT"

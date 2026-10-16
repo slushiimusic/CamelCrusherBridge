@@ -76,7 +76,7 @@ static intptr_t ccDispatcher(AEffect* e, int32_t op, int32_t idx,
     case effGetProgramName: {
         if (!b || !b->ok || !ptr) return 0;
         pthread_mutex_lock(&b->lock);
-        b->shm->iarg = (op == effGetProgramName) ? 0 : idx;
+        b->shm->iarg = (op == effGetProgramName) ? b->curProgram : idx;
         int ok = bridge_call(b, CMD_PROGNAME, 500000);
         if (ok) { strncpy((char*)ptr, b->shm->str, 24); ((char*)ptr)[23] = 0; }
         pthread_mutex_unlock(&b->lock);
