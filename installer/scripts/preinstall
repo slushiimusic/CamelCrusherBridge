@@ -1,0 +1,13 @@
+#!/bin/bash
+set -euo pipefail
+[ "${3:-/}" = / ] || { echo 'Install on the running macOS volume.' >&2; exit 1; }
+[ "$(/usr/sbin/sysctl -n hw.optional.arm64)" = 1 ] || { echo 'An Apple Silicon Mac is required.' >&2; exit 1; }
+/usr/bin/arch -x86_64 /usr/bin/true || { echo 'Rosetta 2 is required. Install Rosetta before continuing.' >&2; exit 1; }
+backup="/Library/Application Support/CamelCrusherBridge/Backups/$(date +%Y%m%d-%H%M%S)-$$"
+for relative in VST/CamelCrusher.vst Components/CamelCrusher.component; do
+    original="/Library/Audio/Plug-Ins/$relative"
+    if [ -e "$original" ]; then
+        mkdir -p "$backup/$(dirname "$relative")"
+        /usr/bin/ditto "$original" "$backup/$relative"
+    fi
+done
