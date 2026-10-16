@@ -1,0 +1,6 @@
+#!/bin/bash
+set -euo pipefail
+for relative in VST/CamelCrusher.vst Components/CamelCrusher.component; do
+    bundle="/Library/Audio/Plug-Ins/$relative"
+    /usr/bin/codesign --verify --deep --strict "$bundle"
+done
