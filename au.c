@@ -390,6 +390,30 @@ static OSStatus CCSetProperty(void* self, AudioUnitPropertyID pid,
     return kAudioUnitErr_InvalidProperty;
 }
 
+/* The shared Cocoa editor (gui.m) drives presets through a tiny VST-style
+   dispatcher. The VST front-end supplies its real one; the AU wires this
+   shim so opening the editor never calls a NULL function pointer. */
+static intptr_t CCBridgeDispatcher(AEffect* e, int32_t op, int32_t idx,
+                                   intptr_t val, void* ptr, float opt) {
+    Bridge* b = (Bridge*)e->object;
+    (void)opt;
+    if (!b) return 0;
+    switch (op) {
+    case effSetProgram:
+        bridge_set_program(b, (int)val);
+        return 1;
+    case effGetProgramNameIndexed: {
+        if (!ptr) return 0;
+        const char* nm = bridge_program_name(b, idx);
+        strncpy((char*)ptr, nm ? nm : "", 24);
+        ((char*)ptr)[23] = 0;
+        return 1;
+    }
+    default:
+        return 0;
+    }
+}
+
 /* -------------------------------------------------------------- lifecycle */
 
 static OSStatus CCInitialize(void* self) {
@@ -622,6 +646,11 @@ static OSStatus CCOpen(void* self, AudioComponentInstance ci) {
 
     if (!bridge_start(&u->br)) return kAudioUnitErr_FailedInitialization;
     u->started = 1;
+
+    /* Wire the editor's mini-dispatcher (see CCBridgeDispatcher above). */
+    u->br.eff.object      = &u->br;
+    u->br.eff.dispatcher  = CCBridgeDispatcher;
+    u->br.eff.numPrograms = CC_NUM_PRESETS;
 
     for (int i = 0; i < CC_NUM_PRESETS; i++) {
         const char* nm = bridge_program_name(&u->br, i);
